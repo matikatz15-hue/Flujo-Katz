@@ -1,0 +1,129 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #0f172a;
+  background: #eef3f7;
+}
+
+body { margin: 0; }
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+aside {
+  background: linear-gradient(180deg, #0b1f34, #14395f);
+  color: #fff;
+  padding: 22px;
+}
+
+.sidebar-subtitle { color: #bfdbfe; margin-top: -8px; }
+aside nav { display: grid; gap: 8px; }
+
+aside a {
+  color: #dbeafe;
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.active-link { background: rgba(255, 255, 255, 0.16); color: #fff; }
+
+main { padding: 24px; }
+
+.section-header h2 { margin-bottom: 4px; }
+.section-header p { margin-top: 0; color: #475569; }
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.card, .card-block {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 14px;
+  margin: 14px 0;
+}
+
+.card-block { display: grid; gap: 8px; align-content: start; }
+
+.inline-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+input, select, button {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+button {
+  background: #0b5ed7;
+  border-color: #0b5ed7;
+  color: #fff;
+  cursor: pointer;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+th, td {
+  text-align: left;
+  padding: 9px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+th { background: #eff6ff; }
+
+.tag-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.error {
+  margin: 10px 0;
+  color: #991b1b;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+@media (max-width: 1150px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .kpi-grid, .two-column, .tag-grid { grid-template-columns: 1fr; }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
