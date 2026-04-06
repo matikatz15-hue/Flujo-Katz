@@ -1,91 +1,44 @@
 # Flujo Katz MVP
 
-Sistema web interno para reemplazar la planilla mensual de flujo de caja con **React + TypeScript + Supabase**.
+MVP de gestión financiera interna con 4 módulos:
+1. Movimientos
+2. Caja
+3. Cheques
+4. Proyecciones
 
-## 1) Arquitectura elegida
+## Estado actual
 
-- **Frontend (React + Vite + TS):** UI simple con 5 pantallas (Dashboard, Movimientos, Cheques, Caja diaria, Resumen mensual).
-- **Backend de datos (Supabase/PostgreSQL):** tablas normalizadas + vistas SQL para cálculos críticos.
-- **Fuente de verdad:** todos los totales gerenciales salen de SQL (`v_daily_cash`, `v_monthly_summary`, vistas de agrupación).
-- **Regla clave:** `internal_transfer` queda almacenado para auditoría, pero excluido de ingresos/egresos reales.
+Se rediseñó la base para arrancar por **Movimientos + Caja** con UX más directa al flujo de Excel:
+- Caja carga operaciones diarias (ingresos/egresos) y permite crear **fondos**, **rubros** y **conceptos** reusable.
+- Movimientos consolida por mes: egresos por rubro/concepto + ingresos por fondo + KPIs.
+- Cheques y Proyecciones quedan operativos como módulos separados.
 
-## 2) Estructura del proyecto
-
-```text
-.
-├── src/
-│   ├── app/App.tsx
-│   ├── components/
-│   ├── lib/
-│   ├── pages/
-│   ├── types/
-│   └── styles.css
-├── supabase/
-│   ├── config.toml
-│   ├── migrations/
-│   └── seed.sql
-├── .env.example
-└── README.md
-```
-
-## 3) Modelo de datos y reportes
-
-Tablas principales:
-- `branches`
-- `accounts`
-- `payment_methods`
-- `categories` (con `parent_id` para subcategorías)
-- `transactions`
-- `checks`
-
-Vistas de reportes:
-- `v_daily_cash`
-- `v_monthly_summary`
-- `v_monthly_by_category`
-- `v_monthly_by_branch`
-- `v_monthly_by_account`
-- `v_monthly_by_payment_method`
-
-## 4) Instalación
-
-### Frontend
+## Run local
 
 ```bash
+git clone https://github.com/matikatz15-hue/Flujo-Katz.git
+cd Flujo-Katz
 cp .env.example .env
 npm install
 npm run dev
 ```
 
-### Supabase local (opcional)
+## Configuración Supabase
 
-Requiere Supabase CLI instalado.
+1. Crear proyecto en Supabase.
+2. Correr migraciones en SQL Editor:
+   - `supabase/migrations/20260330183000_init.sql`
+   - `supabase/migrations/20260330193000_movements_phase1.sql`
+3. Correr seed `supabase/seed.sql`.
+4. Completar `.env` con URL y publishable key.
 
-```bash
-supabase start
-supabase db reset
-```
+## Modelo agregado para fase Movimientos
 
-`supabase db reset` aplica migraciones y `supabase/seed.sql`.
+- `concepts` (catálogo de conceptos por rubro).
+- `monthly_financial_targets` (facturación con IVA, split servicios/productos, USD rate manual).
+- Vistas:
+  - `v_movements_monthly_expense_by_concept`
+  - `v_movements_monthly_income_by_fund`
+  - `v_movements_monthly_totals`
 
-## 5) Funcionalidades MVP implementadas
-
-- **CRUD Movimientos:** alta, edición, listado y filtro por mes.
-- **CRUD Cheques:** alta, edición y listado.
-- **Caja diaria:** ingresos/egresos/neto diario + acumulado mensual.
-- **Resumen mensual:** ingresos, egresos, neto, variación vs mes anterior.
-- **Dashboard:** KPIs diarios + próximos compromisos (`checks` pendientes).
-
-## 6) Validación recomendada
-
-1. Cargar ingreso, egreso y transferencia interna el mismo día.
-2. Verificar que la transferencia no impacte `v_daily_cash` ni `v_monthly_summary`.
-3. Confirmar que el neto mensual = ingresos - egresos (solo movimientos `confirmed`).
-4. Cargar cheque pendiente y verificar que aparezca en Dashboard.
-
-## 7) Decisiones técnicas importantes
-
-- `amount` siempre positivo; el signo lógico lo define `movement_type`.
-- Estado en `transactions` (`draft`, `confirmed`, `cancelled`) para trazabilidad.
-- Índices por fecha y filtros más usados para performance inicial.
-- Triggers `updated_at` para auditabilidad básica.
-
+Esto permite resolver en SQL: diferencia ingreso-egreso, diferencia facturado-egreso y conversión base a USD.

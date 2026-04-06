@@ -6,7 +6,7 @@ on conflict do nothing;
 
 insert into categories (parent_id, name)
 select null, x.name
-from (values ('Ventas'), ('Compras'), ('Servicios'), ('Impuestos'), ('Transferencias')) as x(name)
+from (values ('Ventas'), ('Compras'), ('Servicios'), ('Impuestos'), ('Transferencias'), ('Proveedores'), ('Créditos')) as x(name)
 on conflict do nothing;
 
 insert into accounts (branch_id, name)
@@ -38,3 +38,23 @@ insert into checks (check_type, third_party, amount, issue_date, due_date, statu
 values
 ('issued', 'Proveedor A', 42000, current_date - 1, current_date + 7, 'pending', 'Cheque diferido'),
 ('received', 'Cliente B', 68000, current_date - 5, current_date + 5, 'pending', 'Cobro post-fechado');
+
+insert into concepts (category_id, name)
+select c.id, x.name
+from categories c
+join (values
+  ('Impuestos', 'I.V.A. BASE'),
+  ('Impuestos', 'RETEN. I.V.A. RG.2408'),
+  ('Proveedores', 'DIELFE SRL'),
+  ('Servicios', 'Comision Paquete')
+) as x(category_name, name) on c.name = x.category_name
+on conflict do nothing;
+
+insert into monthly_financial_targets (month, billing_total_with_vat, billing_services_with_vat, billing_products_with_vat, usd_rate)
+values
+(date_trunc('month', current_date)::date, 13124659.61, 5500000.00, 7624659.61, 1418.50)
+on conflict (month) do update
+set billing_total_with_vat = excluded.billing_total_with_vat,
+    billing_services_with_vat = excluded.billing_services_with_vat,
+    billing_products_with_vat = excluded.billing_products_with_vat,
+    usd_rate = excluded.usd_rate;

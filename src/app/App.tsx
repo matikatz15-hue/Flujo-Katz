@@ -1,18 +1,14 @@
 import { NavLink, Route, Routes } from 'react-router-dom';
-import { DashboardPage } from '../pages/DashboardPage';
-import { TransactionsPage } from '../pages/TransactionsPage';
+import { MovementsPage } from '../pages/MovementsPage';
+import { CashPage } from '../pages/CashPage';
 import { ChecksPage } from '../pages/ChecksPage';
-import { CajaPage } from '../pages/CajaPage';
-import { DailyCashPage } from '../pages/DailyCashPage';
-import { MonthlySummaryPage } from '../pages/MonthlySummaryPage';
+import { ProjectionsPage } from '../pages/ProjectionsPage';
 
 const links = [
-  { to: '/', label: 'Dashboard' },
-  { to: '/movimientos', label: 'Movimientos' },
-  { to: '/caja', label: 'Caja' },
-  { to: '/cheques', label: 'Cheques' },
-  { to: '/caja-diaria', label: 'Caja diaria' },
-  { to: '/resumen-mensual', label: 'Resumen mensual' }
+  { to: '/movimientos', label: '1. Movimientos' },
+  { to: '/caja', label: '2. Caja' },
+  { to: '/cheques', label: '3. Cheques' },
+  { to: '/proyecciones', label: '4. Proyecciones' }
 ];
 
 export function App() {
@@ -20,6 +16,7 @@ export function App() {
     <div className="app-shell">
       <aside>
         <h1>Flujo Katz</h1>
+        <p className="sidebar-subtitle">Módulos financieros</p>
         <nav>
           {links.map((link) => (
             <NavLink
@@ -34,12 +31,11 @@ export function App() {
       </aside>
       <main>
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/movimientos" element={<TransactionsPage />} />
-          <Route path="/caja" element={<CajaPage />} />
+          <Route path="/" element={<MovementsPage />} />
+          <Route path="/movimientos" element={<MovementsPage />} />
+          <Route path="/caja" element={<CashPage />} />
           <Route path="/cheques" element={<ChecksPage />} />
-          <Route path="/caja-diaria" element={<DailyCashPage />} />
-          <Route path="/resumen-mensual" element={<MonthlySummaryPage />} />
+          <Route path="/proyecciones" element={<ProjectionsPage />} />
         </Routes>
       </main>
     </div>
