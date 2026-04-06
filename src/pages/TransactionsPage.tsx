@@ -1,8 +1,14 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { MovementType, Transaction, TransactionStatus } from '../types/database';
+import { Category, Credit, MovementType, Transaction, TransactionStatus } from '../types/database';
 import { SectionHeader } from '../components/SectionHeader';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { formatCurrency } from '../lib/format';
+
+const CREDIT_TYPE_LABELS: Record<string, string> = {
+  unpaid_payment: 'Pago no realizado',
+  taken_credit: 'Crédito tomado'
+};
 
 interface Option {
   id: string;
@@ -32,18 +38,33 @@ export function TransactionsPage() {
   const [methods, setMethods] = useState<Option[]>([]);
   const [categories, setCategories] = useState<Option[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [credits, setCredits] = useState<Credit[]>([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
 
   const filteredRows = useMemo(() => rows.filter((tx) => tx.movement_date.startsWith(monthFilter)), [rows, monthFilter]);
 
+  const catName = useMemo(() => {
+    const map: Record<string, string> = {};
+    allCategories.forEach((c) => { map[c.id] = c.name; });
+    return map;
+  }, [allCategories]);
+
   const load = async () => {
-    const [{ data: txData, error: txError }, { data: branchData }, { data: accountData }, { data: methodData }, { data: categoryData }] =
-      await Promise.all([
-        supabase.from('transactions').select('*').order('movement_date', { ascending: false }).limit(500),
-        supabase.from('branches').select('id,name').order('name'),
-        supabase.from('accounts').select('id,name').order('name'),
-        supabase.from('payment_methods').select('id,name').order('name'),
-        supabase.from('categories').select('id,name').order('name')
-      ]);
+    const [
+      { data: txData, error: txError },
+      { data: branchData },
+      { data: accountData },
+      { data: methodData },
+      { data: categoryData },
+      { data: creditData }
+    ] = await Promise.all([
+      supabase.from('transactions').select('*').order('movement_date', { ascending: false }).limit(500),
+      supabase.from('branches').select('id,name').order('name'),
+      supabase.from('accounts').select('id,name').order('name'),
+      supabase.from('payment_methods').select('id,name').order('name'),
+      supabase.from('categories').select('*').order('name'),
+      supabase.from('credits').select('*').eq('status', 'active').order('first_payment_date')
+    ]);
 
     if (txError) {
       setError(txError.message);
@@ -54,6 +75,8 @@ export function TransactionsPage() {
     setAccounts((accountData ?? []) as Option[]);
     setMethods((methodData ?? []) as Option[]);
     setCategories((categoryData ?? []) as Option[]);
+    setAllCategories((categoryData ?? []) as Category[]);
+    setCredits((creditData ?? []) as Credit[]);
   };
 
   useEffect(() => {
@@ -173,6 +196,93 @@ export function TransactionsPage() {
           ))}
         </tbody>
       </table>
+
+      {/* Créditos section */}
+      {credits.length > 0 && (
+        <div style={{ marginTop: 32 }}>
+          <h3 style={{ margin: '0 0 12px' }}>Créditos</h3>
+
+          {/* Pagos No Realizados */}
+          {credits.filter((c) => c.credit_type === 'unpaid_payment').length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <h4 style={{ margin: '0 0 8px', color: '#6b7280', fontWeight: 500 }}>Pagos No Realizados</h4>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Descripción</th>
+                    <th>Concepto</th>
+                    <th>Cuotas restantes</th>
+                    <th style={{ textAlign: 'right' }}>Monto restante</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {credits
+                    .filter((c) => c.credit_type === 'unpaid_payment')
+                    .map((credit) => {
+                      const remaining = credit.amount - credit.paid_amount;
+                      const remainingInstallments = credit.installments - credit.paid_installments;
+                      return (
+                        <tr key={credit.id}>
+                          <td>{credit.description || '-'}</td>
+                          <td>{catName[credit.category_id] ?? '-'}</td>
+                          <td style={{ color: '#dc2626' }}>{remainingInstallments}</td>
+                          <td style={{ textAlign: 'right', color: '#dc2626', fontWeight: 600 }}>
+                            {formatCurrency(remaining)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Créditos Tomados */}
+          {credits.filter((c) => c.credit_type === 'taken_credit').length > 0 && (
+            <div>
+              <h4 style={{ margin: '0 0 8px', color: '#6b7280', fontWeight: 500 }}>Créditos Tomados</h4>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Descripción</th>
+                    <th>Concepto</th>
+                    <th>Cuotas restantes</th>
+                    <th style={{ textAlign: 'right' }}>Monto restante</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {credits
+                    .filter((c) => c.credit_type === 'taken_credit')
+                    .map((credit) => {
+                      const remaining = credit.amount - credit.paid_amount;
+                      const remainingInstallments = credit.installments - credit.paid_installments;
+                      return (
+                        <tr key={credit.id}>
+                          <td>{credit.description || '-'}</td>
+                          <td>{catName[credit.category_id] ?? '-'}</td>
+                          <td style={{ color: '#dc2626' }}>{remainingInstallments}</td>
+                          <td style={{ textAlign: 'right', color: '#dc2626', fontWeight: 600 }}>
+                            {formatCurrency(remaining)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  <tr style={{ fontWeight: 700, borderTop: '2px solid #e5e7eb' }}>
+                    <td colSpan={3}>TOTAL</td>
+                    <td style={{ textAlign: 'right', color: '#dc2626' }}>
+                      {formatCurrency(
+                        credits
+                          .filter((c) => c.credit_type === 'taken_credit')
+                          .reduce((acc, c) => acc + (c.amount - c.paid_amount), 0)
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

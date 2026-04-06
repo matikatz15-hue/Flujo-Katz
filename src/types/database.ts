@@ -1,7 +1,9 @@
 export type MovementType = 'income' | 'expense' | 'internal_transfer';
 export type TransactionStatus = 'draft' | 'confirmed' | 'cancelled';
 export type CheckType = 'issued' | 'received';
-export type CheckStatus = 'pending' | 'deposited' | 'cleared' | 'bounced' | 'cancelled';
+export type CheckStatus = 'pending' | 'deposited' | 'cleared' | 'bounced' | 'cancelled' | 'paid';
+export type CreditType = 'unpaid_payment' | 'taken_credit';
+export type CreditStatus = 'active' | 'completed' | 'cancelled';
 
 export interface Branch {
   id: string;
@@ -48,6 +50,26 @@ export interface Check {
   due_date: string;
   status: CheckStatus;
   notes: string | null;
+  branch_id: string | null;
+  account_id: string | null;
+  payment_method_id: string | null;
+  category_id: string | null;
+  description: string;
+}
+
+export interface Credit {
+  id: string;
+  credit_type: CreditType;
+  category_id: string;
+  description: string;
+  notes: string | null;
+  amount: number;
+  installments: number;
+  first_payment_date: string;
+  paid_amount: number;
+  paid_installments: number;
+  status: CreditStatus;
+  created_at: string;
 }
 
 export interface DailyCashSummary {
